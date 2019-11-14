@@ -49,8 +49,12 @@ class UiMainWindow(object):
         self.text.setObjectName("text")
 
         self.pushButton = QtWidgets.QPushButton(self.centralwidget)  # Запросить в GK и Бахусе
-        self.pushButton.setGeometry(QtCore.QRect(1020, 10, 141, 21))
+        self.pushButton.setGeometry(QtCore.QRect(1020, 10, 100, 21))
         self.pushButton.setObjectName("pushButton")
+
+        self.pushButton_check = QtWidgets.QPushButton(self.centralwidget)  # Запросить в GK и Бахусе
+        self.pushButton_check.setGeometry(QtCore.QRect(1155, 10, 100, 21))
+        self.pushButton_check.setObjectName("pushButton_check")
 
         main_window.setCentralWidget(self.centralwidget)
 
@@ -145,7 +149,7 @@ class UiMainWindow(object):
         ########################################################
         self.table_gk_cache = QtWidgets.QTableWidget(self.centralwidget)
         self.table_gk_cache.setGeometry(10, 270, 1280, 160)
-        self.table_gk_cache.setColumnCount(7)
+        self.table_gk_cache.setColumnCount(8)
         self.table_gk_cache.setRowCount(2)
 
         self.table_gk_cache.setStyleSheet("QTableWidget {\n"
@@ -173,7 +177,8 @@ class UiMainWindow(object):
         self.table_gk_cache.setHorizontalHeaderItem(3, QtWidgets.QTableWidgetItem('IP UTM'))
         self.table_gk_cache.setHorizontalHeaderItem(4, QtWidgets.QTableWidgetItem('Кеш'))
         self.table_gk_cache.setHorizontalHeaderItem(5, QtWidgets.QTableWidgetItem('Продажа'))
-        self.table_gk_cache.setHorizontalHeaderItem(6, QtWidgets.QTableWidgetItem('Запросы в УТМ'))
+        self.table_gk_cache.setHorizontalHeaderItem(6, QtWidgets.QTableWidgetItem('Дата продажи GK'))
+        self.table_gk_cache.setHorizontalHeaderItem(7, QtWidgets.QTableWidgetItem('Запросы в УТМ'))
 
         self.table_gk_cache = self.table_gk_cache
 
@@ -227,10 +232,10 @@ class UiMainWindow(object):
 
         self.table_gk_transport_module = self.table_gk_transport_module
 
-        # self.checker_fsrar_js = QtWidgets.QTextEdit(self.centralwidget)
-        # self.checker_fsrar_js.setGeometry(QtCore.QRect(1090, 30, 205, 570))
-        # self.checker_fsrar_js.setObjectName("checker_fsrar_js")
-        # self.checker_fsrar_js.setFont(QtGui.QFont("Times", 7))
+        self.checker_fsrar_js = QtWidgets.QTextEdit(self.centralwidget)
+        self.checker_fsrar_js.setGeometry(QtCore.QRect(760, 288, 525, 64))
+        self.checker_fsrar_js.setObjectName("checker_fsrar_js")
+        self.checker_fsrar_js.setFont(QtGui.QFont("Times", 7))
 
         self.retranslate_ui(main_window)
         QtCore.QMetaObject.connectSlotsByName(main_window)
@@ -243,6 +248,7 @@ class UiMainWindow(object):
         main_window.setWindowTitle(_translate("main_window", 'Проверка марки'))
 
         self.pushButton.setText(_translate("main_window", "Запросить"))
+        self.pushButton_check.setText(_translate("main_window", "ЕГАИС"))
         try:
             self.pushButton.clicked.connect(self.clear_text)
 
@@ -250,10 +256,11 @@ class UiMainWindow(object):
             self.pushButton.clicked.connect(lambda: self.table_ttn_amc.clearContents())
             self.pushButton.clicked.connect(lambda: self.table_gk_cache.clearContents())
             self.pushButton.clicked.connect(lambda: self.table_gk_transport_module.clearContents())
+            self.pushButton.clicked.connect(lambda: self.checker_fsrar_js.clear())
             # self.pushButton.clicked.connect(BacchusMark.get_mark_bacchus)
             self.pushButton.clicked.connect(GkMark.get_mark_gk)
 
-            # self.pushButton.clicked.connect(EgaisMark.start_check_fsrar_js)
+            self.pushButton_check.clicked.connect(EgaisMark.start_check_fsrar_js)
 
         except Exception as e:
             logger.error(e)
@@ -526,16 +533,20 @@ class GkMark:
 
             status_egais_stamps = GkMark.result_egais_stamps(mark, client)
             if status_egais_stamps:
-                ui.table_gk_cache.setItem(row, 5, QtWidgets.QTableWidgetItem('Есть продажа марки в GK'))
+                #ui.table_gk_cache.setItem(row, 5, QtWidgets.QTableWidgetItem('Есть продажа марки в GK'))
+                status_egais_stamps = status_egais_stamps.split('|')
+                ui.table_gk_cache.setItem(row, 5, QtWidgets.QTableWidgetItem(status_egais_stamps[0]))
+                ui.table_gk_cache.setItem(row, 6, QtWidgets.QTableWidgetItem(status_egais_stamps[1]))
             else:
                 ui.table_gk_cache.setItem(row, 5, QtWidgets.QTableWidgetItem('Нет продажи марки в GK'))
+                ui.table_gk_cache.setItem(row, 6, QtWidgets.QTableWidgetItem('-'))
 
             status_transport_module = GkMark.result_transport_module(mark, client)
             if status_transport_module:
-                ui.table_gk_cache.setItem(row, 6, QtWidgets.QTableWidgetItem('Есть запросы в УТМ в GK'))
+                ui.table_gk_cache.setItem(row, 7, QtWidgets.QTableWidgetItem('Есть запросы в УТМ в GK'))
                 ui.table_gk_cache.resizeColumnsToContents()
             else:
-                ui.table_gk_cache.setItem(row, 6, QtWidgets.QTableWidgetItem('Нет запросов в УТМ в GK'))
+                ui.table_gk_cache.setItem(row, 7, QtWidgets.QTableWidgetItem('Нет запросов в УТМ в GK'))
                 ui.table_gk_cache.resizeColumnsToContents()
 
             status_transaction_module = GkMark.result_transaction_module(mark, client)
@@ -623,7 +634,7 @@ order by to_char(FINISH_TIME, 'yyyy.mm.dd hh24:mi:ss')""")
         return out
 
     def result_egais_stamps(mark, ssh_client):
-        cmd = GkMark.bash_postgres_cmd(f"""SELECT 'Марка в XRG_EGAIS_EXCISE_STAMPS:', *
+        cmd = GkMark.bash_postgres_cmd(f"""SELECT 'Есть продажа марки в GK', to_char(CREATION_TIMESTAMP, 'dd.mm.yyyy hh24:mi:ss')
     from XRG_EGAIS_EXCISE_STAMPS where EXCISE_STAMP = '{mark}'""")
         std_in, out, std_err = ssh_client.exec_command(cmd)
         out = out.read().decode().strip()
@@ -726,10 +737,11 @@ class EgaisMark:
                     for li in soup.find_all('li'):
                         li.name = 'qwerty'
                     for li in soup.find_all('h2'):
-                        li.name = 'h3'
+                        li.name = 'h4'
                     for li in soup.find_all('h1'):
-                        li.name = 'h3'
+                        li.name = 'h4'
                     soup.find('qwerty').clear()
+
                 except Exception as e:
                     logger.error(e)
                 logger.debug("8")
