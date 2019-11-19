@@ -47,7 +47,7 @@ page.onResourceReceived = function (response) {
 };
 
 function onPageReady() {
-    console.log('Page loaded - Checking TTN-'+ system.args[1] + ' ' + system.args[2]);
+    console.log('Page loaded - Checking AMC '+ system.args[1]);
     // console.log(page.content);
     // Заполняем все поля кроме капчи
     page.evaluate(function (valAmc) {
@@ -58,12 +58,6 @@ function onPageReady() {
     // Получаем координаты капчи
     var CaptchaRect = page.evaluate(function () {
         var box = document.getElementById("SampleCaptcha_CaptchaImage").getBoundingClientRect();
-        console.log(box.top);
-        console.log(box.left);
-        console.log(box.width);
-        console.log(box.height);
-        console.log(pageYOffset);
-        console.log(pageXOffset);
         return {
             top: box.top  + pageYOffset,
             //bottom: box.bottom,

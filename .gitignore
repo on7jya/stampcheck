@@ -4,6 +4,7 @@
 
 # Ignore
 GoogleChromePortable/
+instantclient_12_2/
 GoogleChromePortable.rar
 unusable
 __pycache__/
@@ -12,6 +13,7 @@ result.html
 captcha.png
 properties.py
 outgoing.py
+check1_fsrar.html
 
 # IntelliJ project files
 .idea

@@ -746,9 +746,8 @@ class EgaisMark:
                     logger.error(e)
                 logger.debug("8")
 
-                ui.checker_fsrar_js.append('-------------------------')
-                ui.checker_fsrar_js.append(soup.prettify())
-                ui.checker_fsrar_js.append('-------------------------')
+                result_check = soup.prettify()
+                ui.checker_fsrar_js.append(result_check)
                 logger.debug("9")
                 processing = False
                 logger.debug("Successfully checked")
@@ -764,6 +763,10 @@ class EgaisMark:
 
 if __name__ == "__main__":
     import sys
+
+    print(os.environ['PATH'])
+    os.environ['PATH'] = os.getcwd() + '\instantclient_12_2;' + os.environ['PATH']
+    print(os.environ['PATH'])
 
     QtWidgets.QApplication.setStyle('fusion')
     app = QtWidgets.QApplication(sys.argv)
